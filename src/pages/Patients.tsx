@@ -12,22 +12,17 @@ import {
   Edit,
   Eye,
   Search,
-  Calendar,
-  FileText,
-  Pill,
   X
 } from 'lucide-react'
 import { 
   patientService,
   authService,
-  type Patient,
-  type User as UserType
+  type Patient
 } from '../services/api'
 import { formatDate } from '../lib/utils'
 
 export const Patients = () => {
   const [patients, setPatients] = useState<Patient[]>([])
-  const [user, setUser] = useState<UserType | null>(null)
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedSexe, setSelectedSexe] = useState<string>('')
@@ -56,7 +51,6 @@ export const Patients = () => {
   useEffect(() => {
     const currentUser = authService.getCurrentUser()
     if (currentUser) {
-      setUser(currentUser)
       loadData()
     }
   }, [])

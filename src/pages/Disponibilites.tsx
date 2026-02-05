@@ -119,27 +119,28 @@ export const Disponibilites = () => {
         ...formData,
         specialiste: specialisteData.id, // Utiliser l'ID du spécialiste récupéré
         // Nettoyer les dates d'exception vides
-        date_debut_exception: formData.date_debut_exception || null,
-        date_fin_exception: formData.date_fin_exception || null,
+        date_debut_exception: formData.date_debut_exception || undefined,
+        date_fin_exception: formData.date_fin_exception || undefined,
         motif_exception: formData.motif_exception || ''
-      }
-
-      // Supprimer les champs null pour éviter les erreurs de validation
-      if (!dataToSend.date_debut_exception) {
-        delete dataToSend.date_debut_exception
-      }
-      if (!dataToSend.date_fin_exception) {
-        delete dataToSend.date_fin_exception
       }
 
       console.log('Données à envoyer:', dataToSend)
 
-      await disponibiliteService.create(dataToSend)
+      // Créer une copie des données sans les champs null
+      const finalData = { ...dataToSend }
+      if (!finalData.date_debut_exception) {
+        delete (finalData as any).date_debut_exception
+      }
+      if (!finalData.date_fin_exception) {
+        delete (finalData as any).date_fin_exception
+      }
+
+      await disponibiliteService.create(finalData)
       await loadData()
       setShowCreateModal(false)
       resetForm()
       
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erreur lors de la création de la disponibilité:', error)
       
       // Afficher les erreurs de validation spécifiques
@@ -155,7 +156,7 @@ export const Disponibilites = () => {
           errorMessage += `${errors.non_field_errors.join(', ')}\n`
           
           // Message spécifique pour les doublons
-          if (errors.non_field_errors.some(err => err.includes('unique'))) {
+          if (errors.non_field_errors.some((err: any) => err.includes('unique'))) {
             errorMessage += '\n💡 Conseil: Une disponibilité existe déjà pour ce jour et cette heure. Veuillez:\n'
             errorMessage += '   - Choisir un autre créneau horaire\n'
             errorMessage += '   - Ou modifier la disponibilité existante\n'
@@ -204,28 +205,29 @@ export const Disponibilites = () => {
         ...formData,
         specialiste: specialisteData.id, // Utiliser l'ID du spécialiste récupéré
         // Nettoyer les dates d'exception vides
-        date_debut_exception: formData.date_debut_exception || null,
-        date_fin_exception: formData.date_fin_exception || null,
+        date_debut_exception: formData.date_debut_exception || undefined,
+        date_fin_exception: formData.date_fin_exception || undefined,
         motif_exception: formData.motif_exception || ''
-      }
-
-      // Supprimer les champs null pour éviter les erreurs de validation
-      if (!dataToSend.date_debut_exception) {
-        delete dataToSend.date_debut_exception
-      }
-      if (!dataToSend.date_fin_exception) {
-        delete dataToSend.date_fin_exception
       }
 
       console.log('Données à envoyer pour la mise à jour:', dataToSend)
 
-      await disponibiliteService.update(selectedDisponibilite.id, dataToSend)
+      // Créer une copie des données sans les champs null
+      const finalData = { ...dataToSend }
+      if (!finalData.date_debut_exception) {
+        delete (finalData as any).date_debut_exception
+      }
+      if (!finalData.date_fin_exception) {
+        delete (finalData as any).date_fin_exception
+      }
+
+      await disponibiliteService.update(selectedDisponibilite.id, finalData)
       await loadData()
       setShowEditModal(false)
       setSelectedDisponibilite(null)
       resetForm()
       
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erreur lors de la mise à jour de la disponibilité:', error)
       
       // Afficher les erreurs de validation spécifiques
@@ -308,7 +310,7 @@ export const Disponibilites = () => {
       
       for (const newDispo of disponibilitesToCreate) {
         // Normaliser les heures pour la comparaison (enlever les secondes si présentes)
-        const normalizeTime = (time) => {
+        const normalizeTime = (time: string) => {
           if (typeof time === 'string') {
             return time.substring(0, 5) // Garder seulement HH:MM
           }
@@ -355,7 +357,7 @@ export const Disponibilites = () => {
       // Message de succès
       alert(`✅ Planning créé avec succès!\n${disponibilitesToCreate.length} disponibilité(s) ajoutée(s).`)
       
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erreur lors de la création en lot:', error)
       
       // Afficher les erreurs de validation spécifiques
@@ -394,9 +396,6 @@ export const Disponibilites = () => {
   }
 
   const resetForm = () => {
-    // Obtenir la date du jour au format YYYY-MM-DD
-    const today = new Date().toISOString().split('T')[0]
-    
     setFormData({
       jour_semaine: '',
       heure_debut: '',
@@ -408,10 +407,8 @@ export const Disponibilites = () => {
     })
   }
 
-  // Fonction pour initialiser le planning hebdomadaire avec la date du jour
+  // Fonction pour initialiser le planning hebdomadaire
   const initializeBulkData = () => {
-    const today = new Date().toISOString().split('T')[0]
-    
     setBulkData({
       lundi: { actif: false, heure_debut: '08:00', heure_fin: '17:00' },
       mardi: { actif: false, heure_debut: '08:00', heure_fin: '17:00' },
