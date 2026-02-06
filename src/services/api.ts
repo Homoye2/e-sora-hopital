@@ -1,6 +1,6 @@
 import axios from 'axios'
 
-const API_BASE_URL = 'http://localhost:8001/api'
+const API_BASE_URL = 'http://localhost:8000/api'
 
 // Configuration d'axios
 const api = axios.create({
@@ -265,6 +265,14 @@ export interface StatistiquesHopital {
     rendez_vous: number
     consultations: number
   }>
+}
+
+export interface StatistiquesSpecialiste {
+  nombre_consultations: number
+  nombre_rendez_vous: number
+  rendez_vous_en_attente: number
+  note_moyenne: number
+  nombre_avis: number
 }
 
 export interface Registre {
@@ -772,13 +780,13 @@ export const avisService = {
 }
 
 export const statistiquesService = {
-  getHopital: async () => {
+  getHopital: async (): Promise<StatistiquesHopital> => {
     const response = await api.get('/statistiques/')
     return response.data
   },
 
-  getSpecialiste: async () => {
-    const response = await api.get('/statistiques/')
+  getSpecialiste: async (): Promise<StatistiquesSpecialiste> => {
+    const response = await api.get('/specialistes/me/statistiques/')
     return response.data
   },
 }
@@ -836,11 +844,6 @@ export const registreService = {
     const response = await api.post(`/registres/${registreId}/lier_patient/`, {
       patient_id: patientId
     })
-    return response.data
-  },
-
-  creerPatient: async (registreId: number) => {
-    const response = await api.post(`/registres/${registreId}/creer_patient/`)
     return response.data
   },
 }
@@ -1020,6 +1023,22 @@ export interface DossierMedical {
   updated_at: string
 }
 
+export interface Produit {
+  id: number
+  nom: string
+  code_barre?: string
+  description?: string
+  categorie: string
+  dosage?: string
+  forme?: string
+  fabricant?: string
+  prix_unitaire: number
+  prescription_requise: boolean
+  actif: boolean
+  created_at: string
+  updated_at: string
+}
+
 export interface DossierMedicalFormData {
   registre: number
   motif_consultation: string
@@ -1071,4 +1090,29 @@ export const dossierMedicalService = {
     const response = await api.get(`/dossiers-medicaux/${id}/export_pdf/`)
     return response.data
   }
+}
+
+// Service pour Produit
+export const produitService = {
+  getAll: async (params?: { 
+    categorie?: string
+    prescription_requise?: boolean
+    actif?: boolean
+    search?: string
+  }) => {
+    const response = await api.get('/produits/', { params })
+    return response.data
+  },
+  
+  getById: async (id: number) => {
+    const response = await api.get(`/produits/${id}/`)
+    return response.data
+  },
+  
+  recherche: async (query: string, categorie?: string) => {
+    const response = await api.get('/produits/recherche/', { 
+      params: { q: query, categorie } 
+    })
+    return response.data
+  },
 }

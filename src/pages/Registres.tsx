@@ -148,12 +148,6 @@ const Registres: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validation côté client
-    if (!formData.numero_cni?.trim() && !formData.numero_cne?.trim()) {
-      alert('Au moins un numéro d\'identité (CNI ou CNE) est requis.');
-      return;
-    }
-    
     try {
       // Nettoyer les données avant envoi
       const cleanedData = {
@@ -480,15 +474,15 @@ const Registres: React.FC = () => {
                 {!isEditing && (
                   <div className="bg-blue-50 p-4 rounded-lg">
                     <h3 className="text-sm font-medium text-blue-900 mb-3">
-                      Rechercher un patient existant (requis)
+                      Rechercher un patient existant (optionnel)
                     </h3>
                     <p className="text-xs text-blue-700 mb-3">
-                      Au moins un numéro d'identité (CNI ou CNE) est obligatoire. Si le patient existe, ses informations seront automatiquement remplies.
+                      Vous pouvez rechercher un patient existant pour lier ce registre. Si aucun patient n'est trouvé, le registre sera créé sans liaison.
                     </p>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Numéro CNI *
+                          Numéro CNI
                         </label>
                         <div className="flex">
                           <input
@@ -519,7 +513,7 @@ const Registres: React.FC = () => {
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Numéro CNE *
+                          Numéro CNE
                         </label>
                         <div className="flex">
                           <input
@@ -560,20 +554,6 @@ const Registres: React.FC = () => {
                         </div>
                         <p className="text-xs text-green-700 mt-1">
                           Les informations du patient ont été pré-remplies. Le registre sera automatiquement lié à ce patient.
-                        </p>
-                      </div>
-                    )}
-                    
-                    {!patientExistant && (formData.numero_cni || formData.numero_cne) && (
-                      <div className="mt-3 p-3 bg-yellow-100 rounded-lg">
-                        <div className="flex items-center gap-2">
-                          <UserPlus className="w-4 h-4 text-yellow-600" />
-                          <span className="text-sm font-medium text-yellow-800">
-                            Nouveau patient
-                          </span>
-                        </div>
-                        <p className="text-xs text-yellow-700 mt-1">
-                          Aucun patient trouvé avec ce numéro. Un nouveau compte patient sera créé automatiquement.
                         </p>
                       </div>
                     )}
@@ -700,7 +680,7 @@ const Registres: React.FC = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Numéro CNI {!isEditing && '*'}
+                        Numéro CNI
                       </label>
                       <input
                         type="text"
@@ -712,7 +692,7 @@ const Registres: React.FC = () => {
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Numéro CNE {!isEditing && '*'}
+                        Numéro CNE
                       </label>
                       <input
                         type="text"
@@ -723,11 +703,6 @@ const Registres: React.FC = () => {
                       />
                     </div>
                   </div>
-                  {!isEditing && (
-                    <p className="text-xs text-gray-500 mt-1">
-                      * Au moins un numéro d'identité (CNI ou CNE) est requis
-                    </p>
-                  )}
                 </div>
 
                 {/* Consultation */}

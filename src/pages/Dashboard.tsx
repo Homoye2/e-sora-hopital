@@ -18,7 +18,8 @@ import {
   type User, 
   type Hopital,
   type Specialiste,
-  type StatistiquesHopital
+  type StatistiquesHopital,
+  type StatistiquesSpecialiste
 } from '../services/api'
 import { formatDateTime } from '../lib/utils'
 
@@ -26,7 +27,7 @@ export const Dashboard = () => {
   const [user, setUser] = useState<User | null>(null)
   const [hopital, setHopital] = useState<Hopital | null>(null)
   const [specialisteProfile, setSpecialisteProfile] = useState<Specialiste | null>(null)
-  const [statistiques, setStatistiques] = useState<StatistiquesHopital | null>(null)
+  const [statistiques, setStatistiques] = useState<StatistiquesHopital | StatistiquesSpecialiste | null>(null)
   const [prochainRendezVous, setProchainRendezVous] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -126,9 +127,9 @@ export const Dashboard = () => {
                 <Users className="h-4 w-4 text-blue-600" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{statistiques?.total_specialistes || 0}</div>
+                <div className="text-2xl font-bold">{(statistiques as StatistiquesHopital)?.total_specialistes || 0}</div>
                 <p className="text-xs text-muted-foreground">
-                  {statistiques?.specialistes_actifs || 0} actifs
+                  {(statistiques as StatistiquesHopital)?.specialistes_actifs || 0} actifs
                 </p>
               </CardContent>
             </Card>
@@ -139,9 +140,9 @@ export const Dashboard = () => {
                 <Calendar className="h-4 w-4 text-green-600" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{statistiques?.total_rendez_vous || 0}</div>
+                <div className="text-2xl font-bold">{(statistiques as StatistiquesHopital)?.total_rendez_vous || 0}</div>
                 <p className="text-xs text-muted-foreground">
-                  {statistiques?.rendez_vous_en_attente || 0} en attente
+                  {(statistiques as StatistiquesHopital)?.rendez_vous_en_attente || 0} en attente
                 </p>
               </CardContent>
             </Card>
@@ -152,9 +153,9 @@ export const Dashboard = () => {
                 <Stethoscope className="h-4 w-4 text-purple-600" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{statistiques?.total_consultations || 0}</div>
+                <div className="text-2xl font-bold">{(statistiques as StatistiquesHopital)?.total_consultations || 0}</div>
                 <p className="text-xs text-muted-foreground">
-                  {statistiques?.consultations_ce_mois || 0} ce mois
+                  {(statistiques as StatistiquesHopital)?.consultations_ce_mois || 0} ce mois
                 </p>
               </CardContent>
             </Card>
@@ -165,7 +166,7 @@ export const Dashboard = () => {
                 <CheckCircle className="h-4 w-4 text-green-600" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{statistiques?.rendez_vous_confirmes || 0}</div>
+                <div className="text-2xl font-bold">{(statistiques as StatistiquesHopital)?.rendez_vous_confirmes || 0}</div>
                 <p className="text-xs text-green-600">
                   Rendez-vous confirmés
                 </p>
@@ -180,9 +181,9 @@ export const Dashboard = () => {
                 <Calendar className="h-4 w-4 text-blue-600" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{statistiques?.total_rendez_vous || 0}</div>
+                <div className="text-2xl font-bold">{(statistiques as StatistiquesSpecialiste)?.nombre_rendez_vous || 0}</div>
                 <p className="text-xs text-muted-foreground">
-                  {statistiques?.rendez_vous_en_attente || 0} en attente
+                  {(statistiques as StatistiquesSpecialiste)?.rendez_vous_en_attente || 0} en attente
                 </p>
               </CardContent>
             </Card>
@@ -193,9 +194,9 @@ export const Dashboard = () => {
                 <Stethoscope className="h-4 w-4 text-green-600" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{statistiques?.total_consultations || 0}</div>
+                <div className="text-2xl font-bold">{(statistiques as StatistiquesSpecialiste)?.nombre_consultations || 0}</div>
                 <p className="text-xs text-muted-foreground">
-                  {statistiques?.consultations_ce_mois || 0} ce mois
+                  Total effectuées
                 </p>
               </CardContent>
             </Card>
@@ -207,10 +208,10 @@ export const Dashboard = () => {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
-                  {specialisteProfile?.note_moyenne ? Number(specialisteProfile.note_moyenne).toFixed(1) : '0.0'}
+                  {(statistiques as StatistiquesSpecialiste)?.note_moyenne ? Number((statistiques as StatistiquesSpecialiste).note_moyenne).toFixed(1) : '0.0'}
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  {specialisteProfile?.nombre_avis || 0} avis
+                  {(statistiques as StatistiquesSpecialiste)?.nombre_avis || 0} avis
                 </p>
               </CardContent>
             </Card>
@@ -298,17 +299,17 @@ export const Dashboard = () => {
           <CardContent>
             {user?.role === 'admin_hopital' ? (
               <div className="space-y-4">
-                {statistiques?.par_specialite && Object.entries(statistiques.par_specialite).map(([specialite, stats]) => (
+                {(statistiques as StatistiquesHopital)?.par_specialite && Object.entries((statistiques as StatistiquesHopital).par_specialite).map(([specialite, stats]) => (
                   <div key={specialite} className="flex items-center justify-between p-3 border rounded-lg">
                     <div>
                       <p className="font-medium text-gray-900">{specialite}</p>
                       <p className="text-sm text-gray-600">
-                        {stats.specialistes} spécialiste{stats.specialistes > 1 ? 's' : ''}
+                        {(stats as any).specialistes} spécialiste{(stats as any).specialistes > 1 ? 's' : ''}
                       </p>
                     </div>
                     <div className="text-right">
-                      <p className="text-sm font-medium">{stats.rendez_vous} RDV</p>
-                      <p className="text-xs text-gray-500">{stats.consultations} consultations</p>
+                      <p className="text-sm font-medium">{(stats as any).rendez_vous} RDV</p>
+                      <p className="text-xs text-gray-500">{(stats as any).consultations} consultations</p>
                     </div>
                   </div>
                 ))}

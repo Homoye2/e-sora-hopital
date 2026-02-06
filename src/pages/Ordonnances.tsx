@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Search, Eye, Edit, Trash2, Check, X, ArrowLeft, QrCode, Download } from 'lucide-react';
-import { ordonnanceService, registreService, authService, type Ordonnance, type OrdonnanceFormData, type LigneOrdonnanceFormData, type Registre } from '../services/api';
+import { ordonnanceService, registreService, authService, produitService, type Ordonnance, type OrdonnanceFormData, type LigneOrdonnanceFormData, type Registre, type Produit } from '../services/api';
 
 const Ordonnances: React.FC = () => {
   const [ordonnances, setOrdonnances] = useState<Ordonnance[]>([]);
   const [registres, setRegistres] = useState<Registre[]>([]);
+  const [produits, setProduits] = useState<Produit[]>([]);
+  const [produitsFiltered, setProduitsFiltered] = useState<Produit[]>([]);
+  const [showProduitSuggestions, setShowProduitSuggestions] = useState(false);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [showModal, setShowModal] = useState(false);
@@ -48,7 +51,19 @@ const Ordonnances: React.FC = () => {
     
     fetchOrdonnances();
     fetchRegistres();
+    fetchProduits();
   }, [filters]);
+
+  const fetchProduits = async () => {
+    try {
+      const response = await produitService.getAll({ actif: true });
+      const produitsArray = Array.isArray(response) ? response : response.results || [];
+      setProduits(produitsArray);
+    } catch (error) {
+      console.error('Erreur lors du chargement des produits:', error);
+      // Ne pas bloquer si les produits ne sont pas disponibles
+    }
+  };
 
   const fetchOrdonnances = async () => {
     try {
@@ -244,6 +259,36 @@ const Ordonnances: React.FC = () => {
       duree_traitement: 1,
       instructions: ''
     });
+    
+    // Réinitialiser les suggestions
+    setShowProduitSuggestions(false);
+    setProduitsFiltered([]);
+  };
+
+  const handleProduitSearch = (value: string) => {
+    setNouvelleLigne(prev => ({ ...prev, nom_medicament: value }));
+    
+    if (value.trim().length > 0 && produits.length > 0) {
+      // Filtrer les produits qui commencent par la valeur saisie (insensible à la casse)
+      const filtered = produits.filter(produit =>
+        produit.nom.toLowerCase().startsWith(value.toLowerCase())
+      );
+      setProduitsFiltered(filtered);
+      setShowProduitSuggestions(filtered.length > 0);
+    } else {
+      setProduitsFiltered([]);
+      setShowProduitSuggestions(false);
+    }
+  };
+
+  const selectProduit = (produit: Produit) => {
+    setNouvelleLigne(prev => ({
+      ...prev,
+      nom_medicament: produit.nom,
+      dosage: produit.dosage || prev.dosage
+    }));
+    setShowProduitSuggestions(false);
+    setProduitsFiltered([]);
   };
 
   const supprimerLigne = (index: number) => {
@@ -631,13 +676,51 @@ const Ordonnances: React.FC = () => {
                         <label className="block text-sm font-medium text-gray-700 mb-1">
                           Nom du médicament *
                         </label>
-                        <input
-                          type="text"
-                          value={nouvelleLigne.nom_medicament}
-                          onChange={(e) => setNouvelleLigne(prev => ({ ...prev, nom_medicament: e.target.value }))}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                          placeholder="Ex: Paracétamol"
-                        />
+                        <div className="relative">
+                          <input
+                            type="text"
+                            value={nouvelleLigne.nom_medicament}
+                            onChange={(e) => handleProduitSearch(e.target.value)}
+                            onFocus={() => {
+                              if (nouvelleLigne.nom_medicament.trim().length > 0 && produitsFiltered.length > 0) {
+                                setShowProduitSuggestions(true);
+                              }
+                            }}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            placeholder="Ex: Paracétamol (tapez pour rechercher)"
+                            autoComplete="off"
+                          />
+                          {showProduitSuggestions && produitsFiltered.length > 0 && (
+                            <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                              {produitsFiltered.map((produit) => (
+                                <button
+                                  key={produit.id}
+                                  type="button"
+                                  onClick={() => selectProduit(produit)}
+                                  className="w-full text-left px-4 py-2 hover:bg-blue-50 focus:bg-blue-50 focus:outline-none border-b border-gray-100 last:border-b-0"
+                                >
+                                  <div className="font-medium text-gray-900">{produit.nom}</div>
+                                  {produit.dosage && (
+                                    <div className="text-sm text-gray-600">{produit.dosage}</div>
+                                  )}
+                                  {produit.fabricant && (
+                                    <div className="text-xs text-gray-500">{produit.fabricant}</div>
+                                  )}
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                        {produits.length === 0 && (
+                          <p className="text-xs text-gray-500 mt-1">
+                            Aucun produit dans la base. Saisie manuelle activée.
+                          </p>
+                        )}
+                        {produits.length > 0 && (
+                          <p className="text-xs text-gray-500 mt-1">
+                            {produits.length} produit(s) disponible(s) dans la base
+                          </p>
+                        )}
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">

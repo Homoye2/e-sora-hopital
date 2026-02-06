@@ -25,7 +25,7 @@ export const Patients = () => {
   const [patients, setPatients] = useState<Patient[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
-  const [selectedSexe, setSelectedSexe] = useState<string>('')
+  const [selectedSexe, setSelectedSexe] = useState<string>('all')
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [showEditModal, setShowEditModal] = useState(false)
   const [showDetailsModal, setShowDetailsModal] = useState(false)
@@ -60,7 +60,7 @@ export const Patients = () => {
       setLoading(true)
       
       const patientsData = await patientService.getAll({
-        sexe: selectedSexe || undefined,
+        sexe: selectedSexe !== 'all' ? selectedSexe : undefined,
         search: searchTerm || undefined
       })
       
@@ -198,7 +198,7 @@ export const Patients = () => {
                          (patient.email?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
                          (patient.telephone?.toLowerCase() || '').includes(searchTerm.toLowerCase())
     
-    const matchesSexe = selectedSexe === '' || patient.sexe === selectedSexe
+    const matchesSexe = selectedSexe === 'all' || patient.sexe === selectedSexe
     
     return matchesSearch && matchesSexe
   })
@@ -295,7 +295,7 @@ export const Patients = () => {
                 <SelectValue placeholder="Tous" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Tous</SelectItem>
+                <SelectItem value="all">Tous</SelectItem>
                 <SelectItem value="M">Hommes</SelectItem>
                 <SelectItem value="F">Femmes</SelectItem>
               </SelectContent>

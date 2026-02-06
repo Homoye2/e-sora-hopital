@@ -26,14 +26,15 @@ import {
   type RapportConsultation,
   type ConsultationPF,
   type User as UserType,
-  type StatistiquesHopital
+  type StatistiquesHopital,
+  type StatistiquesSpecialiste
 } from '../services/api'
 import { formatDateTime, formatDate } from '../lib/utils'
 
 export const Rapports = () => {
   const [rapports, setRapports] = useState<RapportConsultation[]>([])
   const [consultations, setConsultations] = useState<ConsultationPF[]>([])
-  const [statistiques, setStatistiques] = useState<StatistiquesHopital | null>(null)
+  const [statistiques, setStatistiques] = useState<StatistiquesHopital | StatistiquesSpecialiste | null>(null)
   const [user, setUser] = useState<UserType | null>(null)
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
@@ -407,9 +408,11 @@ export const Rapports = () => {
                         <div className="flex items-center justify-between">
                           <div>
                             <p className="text-sm font-medium text-gray-600">Spécialistes</p>
-                            <p className="text-2xl font-bold">{statistiques.total_specialistes}</p>
+                            <p className="text-2xl font-bold">
+                              {'total_specialistes' in statistiques ? statistiques.total_specialistes : 0}
+                            </p>
                             <p className="text-xs text-green-600">
-                              {statistiques.specialistes_actifs} actifs
+                              {'specialistes_actifs' in statistiques ? statistiques.specialistes_actifs : 0} actifs
                             </p>
                           </div>
                           <User className="h-8 w-8 text-blue-600" />
@@ -422,9 +425,12 @@ export const Rapports = () => {
                         <div className="flex items-center justify-between">
                           <div>
                             <p className="text-sm font-medium text-gray-600">Rendez-vous</p>
-                            <p className="text-2xl font-bold">{statistiques.total_rendez_vous}</p>
+                            <p className="text-2xl font-bold">
+                              {'total_rendez_vous' in statistiques ? statistiques.total_rendez_vous : 
+                               'nombre_rendez_vous' in statistiques ? statistiques.nombre_rendez_vous : 0}
+                            </p>
                             <p className="text-xs text-orange-600">
-                              {statistiques.rendez_vous_en_attente} en attente
+                              {statistiques.rendez_vous_en_attente || 0} en attente
                             </p>
                           </div>
                           <Calendar className="h-8 w-8 text-green-600" />
@@ -437,9 +443,12 @@ export const Rapports = () => {
                         <div className="flex items-center justify-between">
                           <div>
                             <p className="text-sm font-medium text-gray-600">Consultations</p>
-                            <p className="text-2xl font-bold">{statistiques.total_consultations}</p>
+                            <p className="text-2xl font-bold">
+                              {'total_consultations' in statistiques ? statistiques.total_consultations :
+                               'nombre_consultations' in statistiques ? statistiques.nombre_consultations : 0}
+                            </p>
                             <p className="text-xs text-blue-600">
-                              {statistiques.consultations_ce_mois} ce mois
+                              {'consultations_ce_mois' in statistiques ? statistiques.consultations_ce_mois : 0} ce mois
                             </p>
                           </div>
                           <Activity className="h-8 w-8 text-purple-600" />
@@ -452,7 +461,9 @@ export const Rapports = () => {
                         <div className="flex items-center justify-between">
                           <div>
                             <p className="text-sm font-medium text-gray-600">Confirmés</p>
-                            <p className="text-2xl font-bold">{statistiques.rendez_vous_confirmes}</p>
+                            <p className="text-2xl font-bold">
+                              {'rendez_vous_confirmes' in statistiques ? statistiques.rendez_vous_confirmes : 0}
+                            </p>
                             <p className="text-xs text-green-600">
                               Rendez-vous confirmés
                             </p>
@@ -469,9 +480,11 @@ export const Rapports = () => {
                         <div className="flex items-center justify-between">
                           <div>
                             <p className="text-sm font-medium text-gray-600">Mes Rendez-vous</p>
-                            <p className="text-2xl font-bold">{statistiques.total_rendez_vous}</p>
+                            <p className="text-2xl font-bold">
+                              {'nombre_rendez_vous' in statistiques ? statistiques.nombre_rendez_vous : 0}
+                            </p>
                             <p className="text-xs text-orange-600">
-                              {statistiques.rendez_vous_en_attente} en attente
+                              {statistiques.rendez_vous_en_attente || 0} en attente
                             </p>
                           </div>
                           <Calendar className="h-8 w-8 text-blue-600" />
@@ -484,9 +497,11 @@ export const Rapports = () => {
                         <div className="flex items-center justify-between">
                           <div>
                             <p className="text-sm font-medium text-gray-600">Consultations</p>
-                            <p className="text-2xl font-bold">{statistiques.total_consultations}</p>
+                            <p className="text-2xl font-bold">
+                              {'nombre_consultations' in statistiques ? statistiques.nombre_consultations : 0}
+                            </p>
                             <p className="text-xs text-blue-600">
-                              {statistiques.consultations_ce_mois} ce mois
+                              Total effectuées
                             </p>
                           </div>
                           <Activity className="h-8 w-8 text-green-600" />
@@ -498,7 +513,7 @@ export const Rapports = () => {
               </div>
 
               {/* Statistiques par spécialité (pour admin) */}
-              {user?.role === 'admin_hopital' && statistiques.par_specialite && (
+              {user?.role === 'admin_hopital' && 'par_specialite' in statistiques && statistiques.par_specialite && (
                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
@@ -516,17 +531,17 @@ export const Rapports = () => {
                           <div className="flex-1">
                             <h3 className="font-medium text-gray-900">{specialite}</h3>
                             <p className="text-sm text-gray-600">
-                              {stats.specialistes} spécialiste{stats.specialistes > 1 ? 's' : ''}
+                              {(stats as any).specialistes} spécialiste{(stats as any).specialistes > 1 ? 's' : ''}
                             </p>
                           </div>
                           
                           <div className="grid grid-cols-2 gap-4 text-center">
                             <div>
-                              <p className="text-lg font-bold text-blue-600">{stats.rendez_vous}</p>
+                              <p className="text-lg font-bold text-blue-600">{(stats as any).rendez_vous}</p>
                               <p className="text-xs text-gray-500">Rendez-vous</p>
                             </div>
                             <div>
-                              <p className="text-lg font-bold text-green-600">{stats.consultations}</p>
+                              <p className="text-lg font-bold text-green-600">{(stats as any).consultations}</p>
                               <p className="text-xs text-gray-500">Consultations</p>
                             </div>
                           </div>
