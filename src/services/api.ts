@@ -415,7 +415,7 @@ export interface RegistreFormData {
 // Services API
 export const authService = {
   login: async (email: string, password: string) => {
-    const response = await api.post('/auth/login/', { email, password })
+    const response = await api.post('/auth/hospital-login/', { email, password })
     return response.data
   },
   
@@ -639,8 +639,13 @@ export const rendezVousService = {
     return response.data
   },
 
-  annuler: async (id: number, motif?: string) => {
-    const response = await api.post(`/rendez-vous/${id}/annuler/`, { motif })
+  annuler: async (id: number, data: { 
+    motif?: string
+    reprogrammer?: boolean
+    nouvelle_date?: string
+    nouvelle_heure?: string
+  }) => {
+    const response = await api.post(`/rendez-vous/${id}/annuler/`, data)
     return response.data
   },
 
@@ -1055,6 +1060,28 @@ export interface DossierMedicalFormData {
   bilan_imagerie?: string
 }
 
+// Types pour FichierDossierMedical
+export interface FichierDossierMedical {
+  id: number
+  dossier_medical: number
+  type_fichier: string
+  type_fichier_display: string
+  fichier: string
+  fichier_url: string
+  nom_fichier: string
+  description?: string
+  taille_fichier?: number
+  taille_fichier_display?: string
+  type_mime?: string
+  created_at: string
+  updated_at: string
+}
+
+export interface DossierMedicalDetail extends DossierMedical {
+  fichiers: FichierDossierMedical[]
+  fichiers_par_type: Record<string, FichierDossierMedical[]>
+}
+
 // Service pour DossierMedical
 export const dossierMedicalService = {
   getAll: async (params?: any) => {
@@ -1062,7 +1089,7 @@ export const dossierMedicalService = {
     return response.data
   },
   
-  getById: async (id: number) => {
+  getById: async (id: number): Promise<DossierMedicalDetail> => {
     const response = await api.get(`/dossiers-medicaux/${id}/`)
     return response.data
   },
@@ -1089,6 +1116,64 @@ export const dossierMedicalService = {
   exportPDF: async (id: number) => {
     const response = await api.get(`/dossiers-medicaux/${id}/export_pdf/`)
     return response.data
+  },
+
+  uploadFichier: async (id: number, formData: FormData) => {
+    const response = await api.post(`/dossiers-medicaux/${id}/upload_fichier/`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    })
+    return response.data
+  }
+}
+
+// Service pour FichierDossierMedical
+export const fichierDossierMedicalService = {
+  getAll: async (params?: { dossier_medical?: number; type_fichier?: string }) => {
+    const response = await api.get('/fichiers-dossiers-medicaux/', { params })
+    return response.data
+  },
+
+  getById: async (id: number): Promise<FichierDossierMedical> => {
+    const response = await api.get(`/fichiers-dossiers-medicaux/${id}/`)
+    return response.data
+  },
+
+  create: async (formData: FormData): Promise<FichierDossierMedical> => {
+    const response = await api.post('/fichiers-dossiers-medicaux/', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    })
+    return response.data
+  },
+
+  delete: async (id: number): Promise<void> => {
+    await api.delete(`/fichiers-dossiers-medicaux/${id}/`)
+  },
+
+  download: async (id: number, filename?: string) => {
+    try {
+      const response = await api.get(`/fichiers-dossiers-medicaux/${id}/download/`, {
+        responseType: 'blob'
+      })
+      
+      // Créer un lien de téléchargement
+      const url = window.URL.createObjectURL(new Blob([response.data]))
+      const link = document.createElement('a')
+      link.href = url
+      link.setAttribute('download', filename || `fichier_${id}`)
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+      window.URL.revokeObjectURL(url)
+      
+      return true
+    } catch (error) {
+      console.error('Erreur lors du téléchargement du fichier:', error)
+      return false
+    }
   }
 }
 

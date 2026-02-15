@@ -48,6 +48,9 @@ export const RendezVousPage = () => {
   const [actionType, setActionType] = useState<'confirmer' | 'refuser' | 'annuler'>('confirmer')
   const [actionNotes, setActionNotes] = useState('')
   const [actionMotif, setActionMotif] = useState('')
+  const [reprogrammer, setReprogrammer] = useState(false)
+  const [nouvelleDate, setNouvelleDate] = useState('')
+  const [nouvelleHeure, setNouvelleHeure] = useState('')
 
   useEffect(() => {
     const currentUser = authService.getCurrentUser()
@@ -89,6 +92,9 @@ export const RendezVousPage = () => {
     setActionType(action)
     setActionNotes('')
     setActionMotif('')
+    setReprogrammer(false)
+    setNouvelleDate('')
+    setNouvelleHeure('')
     setShowActionModal(true)
   }
 
@@ -108,7 +114,27 @@ export const RendezVousPage = () => {
           await rendezVousService.refuser(selectedRdv.id, actionMotif)
           break
         case 'annuler':
-          await rendezVousService.annuler(selectedRdv.id, actionMotif)
+          // Validation pour l'annulation
+          if (reprogrammer) {
+            if (!nouvelleDate || !nouvelleHeure) {
+              alert('Veuillez sélectionner une nouvelle date et heure pour la reprogrammation')
+              return
+            }
+            
+            // Vérifier que la nouvelle date est dans le futur
+            const nouvelleDatetime = new Date(`${nouvelleDate}T${nouvelleHeure}`)
+            if (nouvelleDatetime <= new Date()) {
+              alert('La nouvelle date doit être dans le futur')
+              return
+            }
+          }
+          
+          await rendezVousService.annuler(selectedRdv.id, {
+            motif: actionMotif,
+            reprogrammer,
+            nouvelle_date: reprogrammer ? nouvelleDate : undefined,
+            nouvelle_heure: reprogrammer ? nouvelleHeure : undefined
+          })
           break
       }
       
@@ -508,6 +534,51 @@ export const RendezVousPage = () => {
                       rows={3}
                       required
                     />
+                  </div>
+                )}
+                
+                {actionType === 'annuler' && (
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        id="reprogrammer"
+                        checked={reprogrammer}
+                        onChange={(e) => setReprogrammer(e.target.checked)}
+                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                      />
+                      <label htmlFor="reprogrammer" className="text-sm font-medium text-gray-700">
+                        Reprogrammer le rendez-vous
+                      </label>
+                    </div>
+                    
+                    {reprogrammer && (
+                      <div className="grid grid-cols-2 gap-4 p-4 bg-blue-50 rounded-lg">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Nouvelle date *
+                          </label>
+                          <Input
+                            type="date"
+                            value={nouvelleDate}
+                            onChange={(e) => setNouvelleDate(e.target.value)}
+                            min={new Date().toISOString().split('T')[0]}
+                            required
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Nouvelle heure *
+                          </label>
+                          <Input
+                            type="time"
+                            value={nouvelleHeure}
+                            onChange={(e) => setNouvelleHeure(e.target.value)}
+                            required
+                          />
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>

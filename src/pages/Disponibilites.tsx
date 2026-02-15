@@ -126,7 +126,7 @@ export const Disponibilites = () => {
 
       console.log('Données à envoyer:', dataToSend)
 
-      // Créer une copie des données sans les champs null
+      // Créer une copie des données sans les champs undefined
       const finalData = { ...dataToSend }
       if (!finalData.date_debut_exception) {
         delete (finalData as any).date_debut_exception
@@ -212,7 +212,7 @@ export const Disponibilites = () => {
 
       console.log('Données à envoyer pour la mise à jour:', dataToSend)
 
-      // Créer une copie des données sans les champs null
+      // Créer une copie des données sans les champs undefined
       const finalData = { ...dataToSend }
       if (!finalData.date_debut_exception) {
         delete (finalData as any).date_debut_exception

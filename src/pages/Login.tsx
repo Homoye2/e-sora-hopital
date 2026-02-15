@@ -45,6 +45,14 @@ export const Login = () => {
         setError('Email ou mot de passe incorrect')
       } else if (error.response?.data?.detail) {
         setError(error.response.data.detail)
+      } else if (error.response?.data?.non_field_errors) {
+        // Gérer les erreurs de validation du serializer
+        const errors = error.response.data.non_field_errors
+        if (Array.isArray(errors) && errors.length > 0) {
+          setError(errors[0])
+        } else {
+          setError('Erreur de connexion. Veuillez réessayer.')
+        }
       } else {
         setError('Erreur de connexion. Veuillez réessayer.')
       }
